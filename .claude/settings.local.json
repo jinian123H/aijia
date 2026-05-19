@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(touch:*)",
+      "Bash(\"E:\\\\app\\\\aijia\\\\app\\\\src\\\\main\\\\java\\\\com\\\\aijia\\\\video\\\\ui\\\\screens\\\\live\\\\LiveScreen.kt\":*)",
+      "Bash(\"E:\\\\app\\\\aijia\\\\app\\\\src\\\\main\\\\java\\\\com\\\\aijia\\\\video\\\\ui\\\\screens\\\\filter\\\\FilterScreen_new.kt\":*)",
+      "Bash(/tmp/check_video_url.txt:*)",
+      "Read(//tmp/**)",
+      "Bash(adb logcat:*)",
+      "Bash(./gradlew :app:compileDebugKotlin)",
+      "Bash(./gradlew clean:*)",
+      "Bash(find . -name \"*.kt\" -type f -exec grep -l \"综艺\\\\|LazyColumn\\\\|LazyVerticalGrid\" {})",
+      "Read(//d E:/app/kumiao5.0/**)",
+      "Bash(go build *)",
+      "Bash(pushd 'E:/app/kumiao5.0/go-api/web/admin-vue')",
+      "Bash(npx vue-tsc *)",
+      "Bash(popd)",
+      "Bash(npx vite *)"
+    ]
+  }
+}

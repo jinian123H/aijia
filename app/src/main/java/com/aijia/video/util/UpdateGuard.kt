@@ -43,6 +43,7 @@ object UpdateGuard {
                     context.packageName,
                     PackageManager.GET_SIGNATURES
                 )
+                @Suppress("DEPRECATION")
                 val signatures = packageInfo.signatures ?: return null
                 if (signatures.isEmpty()) return null
                 val digest = MessageDigest.getInstance("SHA-256")

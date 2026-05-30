@@ -4,13 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -99,9 +96,6 @@ fun BottomNavigationBar(
     )
 ) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val navigationBarInsets = WindowInsets.navigationBars.asPaddingValues()
-    val fixedBottomInset = navigationBarInsets.calculateBottomPadding()
-
     val containerModifier = if (isFixed) {
         Modifier.fillMaxWidth()
     } else {
@@ -125,7 +119,7 @@ fun BottomNavigationBar(
     val contentModifier = if (isFixed) {
         Modifier
             .fillMaxWidth()
-            .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = fixedBottomInset + 8.dp)
+            .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
     } else {
         Modifier
             .fillMaxWidth()
@@ -151,7 +145,7 @@ fun BottomNavigationBar(
             items.forEach { item ->
                 BottomNavigationItemChip(
                     item = item,
-                    selected = currentRoute == item.route,
+                    selected = currentRoute == item.route || (item.route == "short_video" && currentRoute?.startsWith("short_video") == true),
                     isFixed = isFixed,
                     onClick = {
                         if (currentRoute != item.route) {

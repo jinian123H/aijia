@@ -105,6 +105,7 @@ fun PlayerScreen(
     val video by viewModel.video.collectAsStateWithLifecycle()
     val comments by viewModel.comments.collectAsStateWithLifecycle()
     val commentError by viewModel.commentError.collectAsStateWithLifecycle()
+    val isLoadingComments by viewModel.isLoadingComments.collectAsStateWithLifecycle()
     val danmuList by viewModel.danmuList.collectAsStateWithLifecycle()
     val showDanmu by viewModel.showDanmu.collectAsStateWithLifecycle()
     val currentPosition by viewModel.currentPosition.collectAsStateWithLifecycle()
@@ -120,6 +121,7 @@ fun PlayerScreen(
     val feedbackDescription by viewModel.feedbackDescription.collectAsStateWithLifecycle()
     val downloads by downloadViewModel.downloads.collectAsStateWithLifecycle(emptyList())
     val permissionState = appPermission ?: AppPermission.guestDefault()
+    val hasServerVideoPermission by viewModel.hasServerVideoPermission.collectAsStateWithLifecycle()
     val adConfig by adViewModel.adConfig.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val sessionManager = remember(context.applicationContext) {
@@ -210,7 +212,12 @@ fun PlayerScreen(
         }
     }
 
-    val hasVideoPermission = permissionState.hasPermission("video")
+    val hasVideoPermission = hasServerVideoPermission ?: permissionState.hasPermission("video")
+
+    // 实时从服务端获取视频权限
+    LaunchedEffect(Unit) {
+        viewModel.fetchVideoPermission()
+    }
 
     val playSources = remember(video?.id, video?.playFrom, video?.playUrl) {
         parsePlaySources(video?.playFrom, video?.playShow, video?.playUrl, video?.parseConfigs.orEmpty())
@@ -304,12 +311,12 @@ fun PlayerScreen(
             // 本地视频，不使用这个逻辑
             return@LaunchedEffect
         }
-        if (selectedRawVideoUrl.isNotBlank() && permissionState.hasPermission("video")) {
+        if (selectedRawVideoUrl.isNotBlank() && hasVideoPermission) {
             Log.d("PlayerScreen", "Initializing player with raw URL: $selectedRawVideoUrl, from=$selectedPlayFrom, parseApi=$selectedParseApiUrl")
             viewModel.initializePlayer(selectedRawVideoUrl, selectedPlayFrom, selectedParseApiUrl)
             Log.d("PlayerScreen", "Loading danmu for videoId: ${video?.id ?: videoId}, videoUrl: $selectedRawVideoUrl")
             viewModel.loadDanmu(video?.id ?: videoId.toString(), selectedRawVideoUrl)
-        } else if (selectedRawVideoUrl.isNotBlank() && !permissionState.hasPermission("video")) {
+        } else if (selectedRawVideoUrl.isNotBlank() && !hasVideoPermission) {
             Log.w("PlayerScreen", "User has no video permission")
         } else {
             Log.w("PlayerScreen", "Video URL is blank, waiting for data...")
@@ -444,7 +451,6 @@ fun PlayerScreen(
 
                 Box(
                     modifier = Modifier
-                        .statusBarsPadding()
                         .fillMaxWidth()
                         .aspectRatio(16f / 9f)
                 ) {
@@ -725,7 +731,8 @@ fun PlayerScreen(
                                         showPermissionTip("comment", "当前账号暂无评论权限")
                                     }
                                 },
-                                onLoadMore = { },
+                                onLoadMore = { viewModel.loadMoreComments() },
+                                isLoading = isLoadingComments,
                                 errorMessage = commentError,
                                 modifier = Modifier
                                     .padding(horizontal = 16.dp)
@@ -1176,14 +1183,14 @@ private fun PlayerBottomActionBar(
                 Icon(
                     imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = if (isFavorite) "取消收藏" else "收藏",
-                    tint = if (isFavorite) Color.Red else Color.Gray,
+                    tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = if (isFavorite) "已收藏" else "收藏",
                     fontSize = 10.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -1198,14 +1205,14 @@ private fun PlayerBottomActionBar(
                 Icon(
                     imageVector = Icons.Default.Download,
                     contentDescription = "下载",
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "下载",
                     fontSize = 10.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -1220,14 +1227,14 @@ private fun PlayerBottomActionBar(
                 Icon(
                     imageVector = Icons.Default.Feedback,
                     contentDescription = "反馈",
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "反馈",
                     fontSize = 10.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -1242,14 +1249,14 @@ private fun PlayerBottomActionBar(
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "催更",
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "催更",
                     fontSize = 10.sp,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -1315,7 +1322,7 @@ private fun parsePlaySources(
             android.util.Log.d("PlayerScreen", "尝试解密 playUrl: $rawUrl")
             val decrypted = ApiSecurity.decrypt(rawUrl)
             android.util.Log.d("PlayerScreen", "解密成功: $decrypted")
-            decrypted
+            decrypted ?: rawUrl
         }
     } catch (e: Exception) {
         android.util.Log.e("PlayerScreen", "解密失败，使用原始URL", e)

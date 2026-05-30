@@ -205,7 +205,7 @@ private fun FavoriteVideoItem(
                     .fillMaxWidth()
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isRemoving) Color(0xFFE74C3C) else MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = if (isRemoving) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Row(
@@ -251,12 +251,12 @@ private fun FavoriteVideoItem(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "取消收藏",
-                            tint = Color(0xFFE74C3C)
+                            tint = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "取消收藏",
-                            color = Color(0xFFE74C3C)
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }

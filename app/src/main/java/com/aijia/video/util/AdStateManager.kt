@@ -34,7 +34,7 @@ class AdStateManager @Inject constructor(
     val hasAdPermission: StateFlow<Boolean> = sessionManager.permissionFlow
         .map { it.hasPermission("ad") }
         .distinctUntilChanged()
-        .stateIn(scope, SharingStarted.Eagerly, false)
+        .stateIn(scope, SharingStarted.Eagerly, sessionManager.getPermission().hasPermission("ad"))
 
     /** 广告是否已在加载中 */
     private var loadAttempted = false

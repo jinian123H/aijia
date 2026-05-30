@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -41,13 +42,13 @@ fun VideoCoverImage(
     // 如果 model 为 null，显示占位图
     if (model == null) {
         Box(
-            modifier = modifier.background(Color.Gray.copy(alpha = 0.3f)),
+            modifier = modifier.background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Image,
                 contentDescription = contentDescription,
-                tint = Color.Gray,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(40.dp)
             )
         }
@@ -72,7 +73,7 @@ fun VideoCoverImage(
     }
 
     Box(
-        modifier = modifier.background(Color.Gray.copy(alpha = 0.3f)),
+        modifier = modifier.background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)),
         contentAlignment = Alignment.Center
     ) {
         SubcomposeAsyncImage(
@@ -89,7 +90,7 @@ fun VideoCoverImage(
                 Icon(
                     imageVector = Icons.Default.Image,
                     contentDescription = "加载失败",
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(40.dp)
                 )
             }

@@ -27,10 +27,13 @@ fun DanmuView(
 ) {
     val timeWindow = 10f
 
-    val currentDanmuList = remember(danmuList, currentTime) {
+    // 只在秒数变化时重新过滤，减少重组频率
+    val currentSecond = currentTime / 1000
+
+    val currentDanmuList = remember(danmuList, currentSecond) {
         danmuList.filter { danmu ->
             val danmuTimeSeconds = danmu.time / 1000f
-            val currentTimeSeconds = currentTime / 1000f
+            val currentTimeSeconds = currentSecond.toFloat()
             danmuTimeSeconds in (currentTimeSeconds - 0.5f)..(currentTimeSeconds + timeWindow)
         }
     }

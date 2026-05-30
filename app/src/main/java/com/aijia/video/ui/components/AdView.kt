@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.request.ImageRequest
+import coil.size.Size
 import kotlinx.coroutines.delay
 
 @Composable
@@ -72,6 +73,7 @@ fun AdView(
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(imageUrl)
+                .size(Size(1080, 1920))
                 .crossfade(true)
                 .listener(
                     onError = { request, error ->

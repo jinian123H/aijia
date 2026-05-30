@@ -14,6 +14,9 @@
     <!-- 设备唤醒锁 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- 摄像头（扫码登录） -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <!-- 安装APK权限 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
@@ -42,6 +45,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 扫码登录 Activity -->
+        <activity
+            android:name=".ui.activity.ScanQRActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AijiaVideo" />
 
         <!-- FileProvider for APK installation -->
         <provider

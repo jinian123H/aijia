@@ -1,6 +1,7 @@
 package com.aijia.video.data.remote
 
 import com.aijia.video.data.model.*
+import com.google.gson.JsonObject
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
@@ -114,21 +115,16 @@ interface ApiService {
      * 用户登录
      */
     @POST("api/v1/user/login")
-    @FormUrlEncoded
     suspend fun login(
-        @Field("username") username: String,
-        @Field("password") password: String
+        @Body request: JsonObject
     ): Response<ResponseBody>
 
     /**
      * 用户注册
      */
     @POST("api/v1/user/register")
-    @FormUrlEncoded
     suspend fun register(
-        @Field("username") username: String,
-        @Field("password") password: String,
-        @Field("confirm_password") confirmPassword: String
+        @Body request: JsonObject
     ): Response<ResponseBody>
 
 
@@ -150,10 +146,25 @@ interface ApiService {
      * 更新用户信息
      */
     @POST("api/v1/user/update")
-    @FormUrlEncoded
     suspend fun updateUserInfo(
-        @Field("nickname") nickname: String? = null,
-        @Field("avatar") avatar: String? = null
+        @Body request: JsonObject
+    ): Response<ResponseBody>
+
+    // ========== 多端注册登录 ==========
+
+    @GET("api/v1/auth/config")
+    suspend fun getAuthConfig(
+        @Query("device_type") deviceType: String = "phone"
+    ): Response<ResponseBody>
+
+    @POST("api/v1/auth/oneclick-login")
+    suspend fun oneclickLogin(
+        @Body request: JsonObject
+    ): Response<ResponseBody>
+
+    @POST("api/v1/auth/qr/confirm")
+    suspend fun qrConfirm(
+        @Body request: JsonObject
     ): Response<ResponseBody>
 
     // ========== 视频播放 ==========
@@ -193,11 +204,8 @@ interface ApiService {
      * 发表评论
      */
     @POST("api/v1/comment/index")
-    @FormUrlEncoded
     suspend fun postComment(
-        @Field("comment_content") commentContent: String,
-        @Field("rid") rid: Int,
-        @Field("mid") mid: Int
+        @Body request: JsonObject
     ): Response<ResponseBody>
 
     // ========== 反馈系统 ==========
@@ -205,23 +213,14 @@ interface ApiService {
     /**
      * 发表反馈
      */
-    @FormUrlEncoded
     @POST("api/v1/feedback/index")
     suspend fun postFeedback(
-        @Field("feedback_type") type: String,
-        @Field("vod_id") vodId: Int = 0
+        @Body request: JsonObject
     ): Response<ResponseBody>
 
-    @FormUrlEncoded
     @POST("api/v1/urge/index")
     suspend fun postUrge(
-        @Field("vod_id") vodId: Int,
-        @Field("vod_name") vodName: String,
-        @Field("episode_name") episodeName: String = "",
-        @Field("play_from") playFrom: String = "",
-        @Field("play_url") playUrl: String = "",
-        @Field("resolved_url") resolvedUrl: String = "",
-        @Field("cover_url") coverUrl: String = ""
+        @Body request: JsonObject
     ): Response<ResponseBody>
 
     // ========== 弹幕系统 ==========
@@ -245,11 +244,9 @@ interface ApiService {
     /**
      * 提交留言
      */
-    @FormUrlEncoded
     @POST("api/v1/message/index")
     suspend fun submitMessage(
-        @Field("message_content") content: String,
-        @Field("message_contact") contact: String = ""
+        @Body request: JsonObject
     ): Response<ResponseBody>
 
     /**
@@ -304,18 +301,16 @@ interface ApiService {
      * 验证卡密
      */
     @POST("api/v1/card/verify")
-    @FormUrlEncoded
     suspend fun verifyCard(
-        @Field("card_pwd") cardPwd: String
+        @Body request: JsonObject
     ): Response<ResponseBody>
 
     /**
      * 使用卡密
      */
     @POST("api/v1/card/use")
-    @FormUrlEncoded
     suspend fun useCard(
-        @Field("card_pwd") cardPwd: String
+        @Body request: JsonObject
     ): Response<ResponseBody>
 
     /**

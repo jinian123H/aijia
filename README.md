@@ -1,6 +1,6 @@
 # Aijia 视频应用
 
-基于v8-kumiao项目重构的现代化Kotlin视频播放应用，采用最新Android技术栈。
+现代化Kotlin视频播放应用，采用最新Android技术栈。
 
 ## 🚀 技术栈
 
@@ -64,34 +64,7 @@ app/src/main/java/com/aijia/video/
 └── MainActivity.kt               # 主Activity
 ```
 
-## 📡 API接口
 
-项目完全兼容v8-kumiao的API接口，包括：
-
-### 核心接口
-- `/ikumiao_api.php/v1.vod/*` - 视频相关接口
-- `/ikumiao_api.php/v1.auth/*` - 用户认证接口
-- `/ikumiao_api.php/v1.name/*` - 用户数据接口
-- `/ikumiao_api.php/v1.comment/*` - 评论系统接口
-- `/ikumiao_api.php/v1.danmu/*` - 弹幕系统接口
-- `/ikumiao_api.php/v1.zhibo/*` - 直播相关接口
-
-详细API文档请参考：`../v8-kumiao/Aijia-现代化重构方案.md`
-
-## 🎯 与原项目对比
-
-| 特性 | v8-kumiao (旧) | Aijia (新) |
-|------|----------------|-------------|
-| 开发语言 | Java | Kotlin |
-| UI框架 | 传统View系统 | Jetpack Compose |
-| 架构模式 | MVP | MVVM + Clean |
-| 依赖管理 | 手动管理 | Hilt DI |
-| 网络请求 | RxJava + Retrofit | Coroutines + Retrofit |
-| 数据库 | LitePal | Room |
-| 图片加载 | Glide | Coil |
-| 视频播放 | 自定义播放器 | Media3 (ExoPlayer) |
-| SDK版本 | API 28 | API 34 |
-| 最小支持版本 | API 23 | API 24 |
 
 ## 🛠️ 开发环境
 

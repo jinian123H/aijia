@@ -17,6 +17,7 @@ import com.aijia.video.data.model.Comment
 import com.aijia.video.data.remote.ApiSecurity
 import com.aijia.video.data.model.Danmu
 import com.aijia.video.data.model.DanmuType
+import com.aijia.video.data.repository.SessionManager
 import com.aijia.video.data.repository.VideoRepository
 import com.aijia.video.data.repository.CommentRepository
 import com.aijia.video.util.DanmuStorageManager
@@ -26,7 +27,8 @@ import javax.inject.Inject
 class PlayerViewModel @Inject constructor(
     private val application: Application,
     private val videoRepository: VideoRepository,
-    private val commentRepository: CommentRepository
+    private val commentRepository: CommentRepository,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
     private fun formatTime(millis: Long): String {
         if (millis <= 0) return "00:00"
@@ -43,6 +45,12 @@ class PlayerViewModel @Inject constructor(
 
     private val _commentError = MutableStateFlow<String?>(null)
     val commentError = _commentError.asStateFlow()
+
+    private val _isLoadingComments = MutableStateFlow(false)
+    val isLoadingComments = _isLoadingComments.asStateFlow()
+
+    private var _commentPage = 1
+    private var _hasMoreComments = true
 
     private val _danmuList = MutableStateFlow<List<Danmu>>(emptyList())
     val danmuList = _danmuList.asStateFlow()
@@ -85,6 +93,30 @@ class PlayerViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
+
+    private val _hasServerVideoPermission = MutableStateFlow<Boolean?>(null)
+    val hasServerVideoPermission = _hasServerVideoPermission.asStateFlow()
+
+    suspend fun fetchVideoPermission(): Boolean {
+        return try {
+            val result = videoRepository.getUserPermission()
+            val perm = result.getOrNull()
+            if (perm != null) {
+                _hasServerVideoPermission.value = perm.hasPermission("video")
+                perm.hasPermission("video")
+            } else {
+                // 服务端返回未变更（version cache），用本地缓存
+                val cached = sessionManager.getPermission()
+                _hasServerVideoPermission.value = cached.hasPermission("video")
+                cached.hasPermission("video")
+            }
+        } catch (e: Exception) {
+            Log.e("PlayerVM", "fetchVideoPermission error", e)
+            val cached = sessionManager.getPermission()
+            _hasServerVideoPermission.value = cached.hasPermission("video")
+            cached.hasPermission("video")
+        }
+    }
 
     private var exoPlayer: ExoPlayer? = null
 
@@ -231,10 +263,6 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun likeComment(commentId: Long) {
-        // 简化实现
-    }
-
     fun toggleFavorite() {
         viewModelScope.launch {
             val currentVideo = _video.value ?: return@launch
@@ -287,7 +315,7 @@ class PlayerViewModel @Inject constructor(
 
         // 解密播放链接（后端AES-256-GCM加密，防TVBox抓包）
         val decryptedPlayUrl = try {
-            video.playUrl?.let { ApiSecurity.decrypt(it) }
+            video.playUrl?.let { ApiSecurity.decrypt(it) ?: it }
         } catch (_: Exception) {
             video.playUrl // 解密失败降级使用原值
         }
@@ -302,7 +330,7 @@ class PlayerViewModel @Inject constructor(
                     null
                 } else {
                     // 对每集URL也尝试解密（防止整体解密失败时每集URL仍是密文）
-                    val url = try { ApiSecurity.decrypt(rawUrl) } catch (_: Exception) { rawUrl }
+                    val url = try { ApiSecurity.decrypt(rawUrl) ?: rawUrl } catch (_: Exception) { rawUrl }
                     PlayUrl(
                         name = name.ifBlank { "第1集" },
                         url = url
@@ -493,16 +521,14 @@ class PlayerViewModel @Inject constructor(
                 val result = videoRepository.getVideoDetail(videoId)
                 result.onSuccess { videoDetail ->
                     _video.value = videoDetail.video
-                    // 如果视频详情中有评论，直接使用
                     if (videoDetail.comments.isNotEmpty()) {
                         _comments.value = videoDetail.comments
+                    } else {
+                        loadComments(videoId)
                     }
                 }.onFailure { error ->
                     _errorMessage.value = error.message ?: "加载视频信息失败"
                 }
-
-                // 单独加载评论（后端视频详情接口可能不返回评论）
-                loadComments(videoId)
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "加载视频信息失败"
             }
@@ -514,15 +540,39 @@ class PlayerViewModel @Inject constructor(
             val videoIdInt = videoId.toIntOrNull() ?: 0
             if (videoIdInt <= 0) return@launch
 
+            _commentPage = 1
+            _hasMoreComments = true
             commentRepository.getVideoComments(videoIdInt, page = 1, limit = 20)
                 .onSuccess { response ->
-                    if (response.data.comments.isNotEmpty()) {
-                        _comments.value = response.data.comments
-                    }
+                    _comments.value = response.data.comments
+                    val total = response.data.total
+                    _hasMoreComments = response.data.comments.size >= 20
                 }
                 .onFailure { error ->
                     Log.w("PlayerViewModel", "加载评论失败: ${error.message}")
                 }
+        }
+    }
+
+    fun loadMoreComments() {
+        val videoId = _video.value?.id?.toIntOrNull() ?: return
+        if (_isLoadingComments.value || !_hasMoreComments) return
+
+        viewModelScope.launch {
+            _isLoadingComments.value = true
+            _commentPage++
+            commentRepository.getVideoComments(videoId, page = _commentPage, limit = 20)
+                .onSuccess { response ->
+                    if (response.data.comments.isNotEmpty()) {
+                        _comments.value = _comments.value + response.data.comments
+                    }
+                    _hasMoreComments = response.data.comments.size >= 20
+                }
+                .onFailure { error ->
+                    _commentPage--
+                    Log.w("PlayerViewModel", "加载更多评论失败: ${error.message}")
+                }
+            _isLoadingComments.value = false
         }
     }
 
@@ -646,17 +696,17 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun releasePlayer() {
-        // 释放统一由 onCleared() 处理，避免双重释放
-    }
-
-    override fun onCleared() {
-        super.onCleared()
         exoPlayer?.apply {
             stop()
             clearMediaItems()
             release()
         }
         exoPlayer = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        releasePlayer()
     }
 }
 

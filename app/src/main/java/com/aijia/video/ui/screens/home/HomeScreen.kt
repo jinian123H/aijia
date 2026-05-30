@@ -187,7 +187,7 @@ fun HomeScreen(
                     PrefetchVideoCovers(
                         urls = cardPrefetchUrls,
                         targetWidth = 240.dp,
-                        targetHeight = 426.dp
+                        targetHeight = 320.dp
                     )
 
                     if (categoryId == 0) {
@@ -527,8 +527,7 @@ private fun HomeTopBar(
     Surface(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
-        shadowElevation = 6.dp,
-        modifier = Modifier.statusBarsPadding()
+        shadowElevation = 6.dp
     ) {
         Column(
             modifier = Modifier

@@ -379,7 +379,7 @@ class ShortVideoViewModel @Inject constructor(
     fun parseEpisodes(video: Video): List<PlayUrl> {
         // 解密播放链接（后端AES-256-GCM加密，防TVBox抓包）
         val decryptedPlayUrl = try {
-            video.playUrl?.let { ApiSecurity.decrypt(it) }
+            video.playUrl?.let { ApiSecurity.decrypt(it) ?: it }
         } catch (_: Exception) {
             video.playUrl // 解密失败降级使用原值
         }
@@ -1141,7 +1141,7 @@ private fun ShortVideoPage(
                         ShortVideoActionButton(
                             icon = Icons.Default.Star,
                             label = if (isFavorite) "已藏" else "收藏",
-                            tint = if (isFavorite) Color(0xFFFFD54F) else Color.White,
+                            tint = if (isFavorite) MaterialTheme.colorScheme.secondary else Color.White,
                             onClick = onFavorite
                         )
                         ShortVideoActionButton(

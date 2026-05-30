@@ -1,13 +1,20 @@
 package com.aijia.video.ui.screens.performance
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aijia.video.performance.*
+import coil.Coil
+import com.aijia.video.util.AdCacheManager
+import com.aijia.video.util.VersionCacheManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -18,7 +25,10 @@ class PerformanceViewModel @Inject constructor(
     private val performanceMonitor: PerformanceMonitor,
     private val startupOptimizer: StartupOptimizer,
     private val memoryOptimizer: MemoryOptimizer,
-    private val uiPerformanceOptimizer: UIPerformanceOptimizer
+    private val uiPerformanceOptimizer: UIPerformanceOptimizer,
+    private val versionCacheManager: VersionCacheManager,
+    private val adCacheManager: AdCacheManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     
     // 内存使用情况
@@ -127,16 +137,23 @@ class PerformanceViewModel @Inject constructor(
     /**
      * 清理缓存
      */
+    @OptIn(coil.annotation.ExperimentalCoilApi::class)
     fun clearCache() {
         viewModelScope.launch {
-            // 清理各种缓存
+            versionCacheManager.clearAllCache()
+            adCacheManager.clearCache()
+            Coil.imageLoader(context).memoryCache?.clear()
+            withContext(Dispatchers.IO) {
+                Coil.imageLoader(context).diskCache?.clear()
+                context.cacheDir.deleteRecursively()
+            }
             memoryOptimizer.checkAndOptimizeMemory()
-            
+
             _optimizationSuggestions.value = listOf(
                 "缓存清理完成",
                 "- 清理图片缓存",
-                "- 清理网络缓存", 
-                "- 清理数据库缓存",
+                "- 清理广告缓存",
+                "- 清理版本缓存",
                 "- 释放内存"
             )
         }

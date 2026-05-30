@@ -114,14 +114,14 @@ fun PlayHistoryCard(
                             .height(4.dp)
                             .weight(1f)
                             .clip(RoundedCornerShape(2.dp))
-                            .background(Color.Gray.copy(alpha = 0.5f))
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                     ) {
                         if (progressPercent > 0) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxHeight()
                                     .fillMaxWidth(progressPercent)
-                                    .background(Color(0xFF6366F1))
+                                    .background(MaterialTheme.colorScheme.primary)
                             )
                         }
                     }
@@ -131,7 +131,7 @@ fun PlayHistoryCard(
                     Button(
                         onClick = onPlayClick,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF6366F1)
+                            containerColor = MaterialTheme.colorScheme.primary
                         ),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     ) {

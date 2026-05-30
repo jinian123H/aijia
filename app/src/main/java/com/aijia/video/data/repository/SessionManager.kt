@@ -116,9 +116,9 @@ class SessionManager @Inject constructor(
     }
 
     fun getThemeMode(): String {
-        return when (prefs.getString(KEY_THEME_MODE, AppThemeDefaults.THEME_CLASSIC)) {
-            AppThemeDefaults.THEME_GOLDEN -> AppThemeDefaults.THEME_GOLDEN
-            else -> AppThemeDefaults.THEME_CLASSIC
+        return when (prefs.getString(KEY_THEME_MODE, AppThemeDefaults.THEME_GOLDEN)) {
+            AppThemeDefaults.THEME_CLASSIC -> AppThemeDefaults.THEME_CLASSIC
+            else -> AppThemeDefaults.THEME_GOLDEN
         }
     }
 

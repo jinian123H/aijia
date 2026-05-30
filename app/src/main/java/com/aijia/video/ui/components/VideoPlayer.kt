@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -146,7 +147,7 @@ fun VideoPlayer(
                     viewModel.updateDuration(duration)
                 }
             }
-            delay(100)
+            delay(500)
         }
     }
 
@@ -318,7 +319,7 @@ fun VideoPlayer(
                     Icon(
                         imageVector = Icons.Default.SkipPrevious,
                         contentDescription = "上一集",
-                        tint = if (hasPreviousEpisode) Color.White else Color.Gray
+                        tint = if (hasPreviousEpisode) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -356,7 +357,7 @@ fun VideoPlayer(
                     Icon(
                         imageVector = Icons.Default.SkipNext,
                         contentDescription = "下一集",
-                        tint = if (hasNextEpisode) Color.White else Color.Gray
+                        tint = if (hasNextEpisode) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -454,7 +455,7 @@ fun VideoPlayer(
                             modifier = Modifier
                                 .width(24.dp)
                                 .height(60.dp)
-                                .background(Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp)),
+                                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(4.dp)),
                             contentAlignment = Alignment.BottomCenter
                         ) {
                             Box(
@@ -486,7 +487,7 @@ fun VideoPlayer(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.VolumeUp,
+                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                             contentDescription = "音量",
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
@@ -500,7 +501,7 @@ fun VideoPlayer(
                             modifier = Modifier
                                 .width(24.dp)
                                 .height(60.dp)
-                                .background(Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp)),
+                                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(4.dp)),
                             contentAlignment = Alignment.BottomCenter
                         ) {
                             Box(
@@ -528,7 +529,7 @@ private fun EpisodePanel(
     Box(
         modifier = modifier
             .background(Color.Black.copy(alpha = 0.8f))
-            .border(1.dp, Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+            .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
             .padding(16.dp)
             .width(220.dp)
             .heightIn(max = 400.dp)
@@ -583,8 +584,8 @@ private fun EpisodeButton(
             .size(48.dp)
             .clip(RoundedCornerShape(8.dp)),
         colors = ButtonDefaults.textButtonColors(
-            containerColor = if (isCurrent) Color(0xFF2196F3) else Color.Transparent,
-            contentColor = if (isCurrent) Color.White else Color.Gray
+            containerColor = if (isCurrent) MaterialTheme.colorScheme.primary else Color.Transparent,
+            contentColor = if (isCurrent) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
         )
     ) {
         Text(

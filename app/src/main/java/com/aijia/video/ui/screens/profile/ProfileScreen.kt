@@ -21,14 +21,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Message
-import androidx.compose.material.icons.filled.ColorLens
+
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Update
+
+
+
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
@@ -102,6 +104,7 @@ data class ProfileUiState(
     val endTimeText: String = "",
     val isLoggedIn: Boolean = false,
     val authMessage: String? = null,
+    val phoneAuthConfig: com.aijia.video.data.model.PhoneAuthConfig? = null,
     val errorMessage: String? = null
 )
 
@@ -110,7 +113,9 @@ class ProfileViewModel @Inject constructor(
     private val videoRepository: VideoRepository,
     private val downloadRepository: com.aijia.video.data.repository.DownloadRepository,
     private val versionCacheManager: com.aijia.video.util.VersionCacheManager,
+    private val adCacheManager: com.aijia.video.util.AdCacheManager,
     private val sessionManager: SessionManager,
+    private val deviceInfo: com.aijia.video.data.repository.DeviceInfo,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -236,8 +241,52 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun oneclickLogin() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, authMessage = null)
+            val result = videoRepository.oneclickLogin(deviceInfo.deviceId, deviceInfo.deviceName)
+            result.fold(
+                onSuccess = { data ->
+                    if (data.token.isNotEmpty()) {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            authMessage = if (data.isNew) "注册成功" else "登录成功",
+                            isLoggedIn = true
+                        )
+                        viewModelScope.launch {
+                            delay(500)
+                            loadProfile()
+                            versionCacheManager.clearCache(com.aijia.video.util.VersionCacheManager.KEY_USER_PERMISSION)
+                            videoRepository.getUserPermission()
+                        }
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "一键登录失败，请重试"
+                        )
+                    }
+                },
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = it.message ?: "一键登录失败"
+                    )
+                }
+            )
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
+    fun loadAuthConfig() {
+        viewModelScope.launch {
+            val result = videoRepository.getPhoneAuthConfig()
+            result.onSuccess { config ->
+                _uiState.value = _uiState.value.copy(phoneAuthConfig = config)
+            }
+        }
     }
 
     fun logout() {
@@ -286,16 +335,14 @@ class ProfileViewModel @Inject constructor(
     @OptIn(coil.annotation.ExperimentalCoilApi::class)
     fun clearCache() {
         viewModelScope.launch {
-            videoRepository.clearPlayHistory()
-            videoRepository.clearAllFavorites()
-            downloadRepository.clearAll()
             versionCacheManager.clearAllCache()
+            adCacheManager.clearCache()
             // 清 Coil 内存缓存
             coil.Coil.imageLoader(context).memoryCache?.clear()
-            // 清 Coil 磁盘缓存（coil_image_cache 目录）
+            // 清 Coil 磁盘缓存 + 应用缓存目录
             withContext(kotlinx.coroutines.Dispatchers.IO) {
                 coil.Coil.imageLoader(context).diskCache?.clear()
-                context.cacheDir.resolve("coil_image_cache").deleteRecursively()
+                context.cacheDir.deleteRecursively()
             }
         }
     }
@@ -327,14 +374,17 @@ fun ProfileScreen(
     val isGoldenTheme = themeMode == AppThemeDefaults.THEME_GOLDEN
     val context = LocalContext.current
     var showClearCacheDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
 
-    // 获取本地版本
-    val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-    val localVersionCode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-        packageInfo.longVersionCode.toInt()
-    } else {
-        @Suppress("DEPRECATION")
-        packageInfo.versionCode
+    // 获取本地版本（remember 避免每次重组访问 PackageManager）
+    val localVersionCode = remember {
+        val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode.toInt()
+        } else {
+            @Suppress("DEPRECATION")
+            packageInfo.versionCode
+        }
     }
     
 
@@ -386,10 +436,35 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            AvatarSection(
-                                avatar = uiState.userInfo?.avatar,
-                                displayName = uiState.displayName
-                            )
+                            if (uiState.isLoggedIn) {
+                                AvatarSection(
+                                    avatar = uiState.userInfo?.avatar,
+                                    displayName = uiState.displayName
+                                )
+                            } else {
+                                // δ��¼ʱ��ʾĬ��ͷ������
+                                Box(
+                                    modifier = Modifier
+                                        .size(78.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.linearGradient(
+                                                colors = listOf(
+                                                    MaterialTheme.colorScheme.surfaceVariant,
+                                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                                )
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Person,
+                                        contentDescription = "δ��¼",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f),
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                }
+                            }
 
                             Column(
                                 modifier = Modifier.weight(1f),
@@ -399,7 +474,10 @@ fun ProfileScreen(
                                     text = uiState.displayName,
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onBackground
+                                    color = if (uiState.isLoggedIn) 
+                                        MaterialTheme.colorScheme.onBackground 
+                                    else 
+                                        MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Surface(
                                     shape = RoundedCornerShape(999.dp),
@@ -423,15 +501,6 @@ fun ProfileScreen(
                                 }
                             }
 
-                            if (uiState.isLoggedIn) {
-                                IconButton(onClick = { viewModel.logout() }) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                                        contentDescription = "退出登录",
-                                        tint = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
-                            }
                         }
 
                         // 会员到期时间显示区域（头像区域以外）
@@ -464,8 +533,8 @@ fun ProfileScreen(
                                         .background(
                                             Brush.horizontalGradient(
                                                 colors = listOf(
-                                                    Color(0xFF58A8D1),
-                                                    Color(0xFF6CB7D6)
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.85f)
                                                 )
                                             )
                                         )
@@ -484,14 +553,14 @@ fun ProfileScreen(
                                             Icon(
                                                 imageVector = Icons.Default.CardGiftcard,
                                                 contentDescription = null,
-                                                tint = Color.Black,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                                 modifier = Modifier.size(20.dp)
                                             )
                                             Text(
                                                 text = "注册送好礼",
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 18.sp,
-                                                color = Color.Black
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                         }
                                         // 右侧：登录/注册按钮
@@ -502,7 +571,7 @@ fun ProfileScreen(
                                                 .height(48.dp),
                                             shape = RoundedCornerShape(16.dp),
                                             colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color.Black
+                                                containerColor = MaterialTheme.colorScheme.inverseSurface
                                             )
                                         ) {
                                             Text(
@@ -510,7 +579,7 @@ fun ProfileScreen(
                                                 maxLines = 1,
                                                 softWrap = false,
                                                 fontSize = 12.sp,
-                                                color = Color(0xFF6EC6FF),
+                                                color = MaterialTheme.colorScheme.inverseOnSurface,
                                                 fontWeight = FontWeight.Medium
                                             )
                                         }
@@ -533,10 +602,14 @@ fun ProfileScreen(
                             GridItem(painter = painterResource(R.drawable.ls1), title = "观看历史", onClick = onNavigateToHistory),
                             GridItem(painter = painterResource(R.drawable.sc1), title = "我的收藏", onClick = onNavigateToFavorites),
                             GridItem(painter = painterResource(R.drawable.xz1), title = "我的下载", onClick = onNavigateToDownload),
-                            GridItem(painter = painterResource(R.drawable.fk1), title = "留言反馈", onClick = onNavigateToMessage),
+                            GridItem(painter = painterResource(R.drawable.fk1), title = "扫一扫", onClick = {
+                                val intent = android.content.Intent(context, com.aijia.video.ui.activity.ScanQRActivity::class.java)
+                                context.startActivity(intent)
+                            }),
                             GridItem(painter = painterResource(R.drawable.km1), title = "卡密兑换", onClick = onNavigateToCardExchange),
                             GridItem(painter = painterResource(R.drawable.zt1), title = "主题设置", onClick = onNavigateToThemeSettings),
-                            GridItem(painter = painterResource(R.drawable.ql1), title = "清理缓存", onClick = { showClearCacheDialog = true })
+                            GridItem(painter = painterResource(R.drawable.fk1), title = "留言反馈", onClick = onNavigateToMessage),
+                            GridItem(painter = painterResource(R.drawable.ql1), title = "清理缓存", onClick = { showClearCacheDialog = true }),
                         )
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             gridItems.chunked(4).forEach { rowItems ->
@@ -595,6 +668,15 @@ fun ProfileScreen(
                                 )
                                 MenuDivider()
                                 ProfileMenuItem(
+                                    painter = painterResource(id = R.drawable.fk1),
+                                    title = "扫一扫",
+                                    onClick = {
+                                        val intent = android.content.Intent(context, com.aijia.video.ui.activity.ScanQRActivity::class.java)
+                                        context.startActivity(intent)
+                                    }
+                                )
+                                MenuDivider()
+                                ProfileMenuItem(
                                     painter = painterResource(id = R.drawable.kmdh),
                                     title = "卡密兑换",
                                     onClick = onNavigateToCardExchange
@@ -609,9 +691,17 @@ fun ProfileScreen(
                                 ProfileMenuItem(
                                     painter = painterResource(id = R.drawable.qlhc),
                                     title = "清理缓存",
-                                    onClick = { showClearCacheDialog = true },
-                                    isLast = true
+                                    onClick = { showClearCacheDialog = true }
                                 )
+                                if (uiState.isLoggedIn) {
+                                    MenuDivider()
+                                    ProfileMenuItem(
+                                        icon = Icons.AutoMirrored.Filled.Logout,
+                                        title = "退出登录",
+                                        onClick = { viewModel.logout() },
+                                        isLast = true
+                                    )
+                                }
                             }
                         }
                     }
@@ -625,7 +715,7 @@ fun ProfileScreen(
                 title = { Text("清理缓存") },
                 text = {
                     Text(
-                        "此操作将清除观看历史、我的收藏、已下载内容及应用缓存数据，登录信息将保留。\n\n确定要继续吗？",
+                        "此操作将清除图片缓存、广告缓存及应用临时数据，观看历史、收藏和下载内容不会被清除。\n\n确定要继续吗？",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 },
@@ -646,6 +736,25 @@ fun ProfileScreen(
                 dismissButton = {
                     TextButton(onClick = { showClearCacheDialog = false }) {
                         Text("取消")
+                    }
+                }
+            )
+        }
+
+        if (showAboutDialog) {
+            AlertDialog(
+                onDismissRequest = { showAboutDialog = false },
+                title = { Text("关于爱家视频") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("爱家视频 v$localVersionCode", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                        Text("一款聚合视频播放应用", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("提供海量影视资源在线观看", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showAboutDialog = false }) {
+                        Text("确定")
                     }
                 }
             )
@@ -767,7 +876,7 @@ private fun MenuDivider() {
     androidx.compose.material3.HorizontalDivider(
         modifier = Modifier.padding(horizontal = 16.dp),
         thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
     )
 }
 
@@ -827,7 +936,7 @@ private fun ProfileMenuItem(
         Icon(
             imageVector = androidx.compose.material.icons.Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f),
             modifier = Modifier.size(18.dp)
         )
     }
@@ -937,6 +1046,74 @@ private fun AvatarSection(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
             )
+        }
+    }
+}
+
+
+@Composable
+private fun MenuGridItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String? = null,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(
+            width = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+            )
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
         }
     }
 }

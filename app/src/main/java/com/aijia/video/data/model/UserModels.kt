@@ -78,7 +78,18 @@ data class LoginResponse(
     val userEndTime: Long? = null,
 
     @SerializedName("expire_time")
-    val expireTime: Long = 0L
+    val expireTime: Long = 0L,
+
+    // 登录时服务端内嵌的权限字段（减少额外请求）
+    val video: Int = 1,
+    val danmaku: Int = 0,
+    val comment: Int = 0,
+    val feedback: Int = 0,
+    val urge: Int = 0,
+    val search: Int = 0,
+    val download: Int = 0,
+    val ad: Int = 1,
+    val extend: Int = 0
 )
 
 data class RegisterResponse(
@@ -98,7 +109,18 @@ data class RegisterResponse(
     val nickName: String,
 
     @SerializedName("token")
-    val token: String
+    val token: String,
+
+    // 注册时服务端内嵌的权限字段
+    val video: Int = 1,
+    val danmaku: Int = 0,
+    val comment: Int = 0,
+    val feedback: Int = 0,
+    val urge: Int = 0,
+    val search: Int = 0,
+    val download: Int = 0,
+    val ad: Int = 1,
+    val extend: Int = 0
 )
 
 /**
@@ -238,4 +260,30 @@ data class VideoScore(
     
     @SerializedName("user_score")
     val userScore: Float? = null
+)
+
+// ========== 多端注册登录 ==========
+
+data class PhoneAuthConfig(
+    @SerializedName("device_type") val deviceType: String = "phone",
+    @SerializedName("oneclick_login") val oneclickLogin: Boolean = false,
+    @SerializedName("manual_register") val manualRegister: Boolean = true,
+    @SerializedName("auto_register_trial_days") val autoRegisterTrialDays: Int = 7,
+    @SerializedName("manual_register_trial_days") val manualRegisterTrialDays: Int = 7
+)
+
+data class OneClickLoginResponse(
+    @SerializedName("is_new") val isNew: Boolean = false,
+    @SerializedName("need_register") val needRegister: Boolean = false,
+    @SerializedName("username") val username: String = "",
+    @SerializedName("token") val token: String = "",
+    @SerializedName("user_id") val userId: Int = 0,
+    @SerializedName("group_id") val groupId: Int = 1,
+    @SerializedName("group_name") val groupName: String? = null,
+    @SerializedName("user_end_time") val userEndTime: Long = 0,
+    @SerializedName("login_mode") val loginMode: String = ""
+)
+
+data class QRConfirmRequest(
+    @SerializedName("token") val token: String
 )

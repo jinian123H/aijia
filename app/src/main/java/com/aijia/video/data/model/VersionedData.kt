@@ -42,7 +42,7 @@ data class VideoTypeVersionedData(
 data class HomeIndexVersionedData(
     @SerializedName("version_id") val versionId: String = "",
     @SerializedName("data_changed") val dataChanged: Boolean = true,
-    @SerializedName("content") val content: HomeIndexResponse? = null
+    @SerializedName("content") val content: List<HomeSection>? = null
 )
 
 data class AppPermissionVersionedData(

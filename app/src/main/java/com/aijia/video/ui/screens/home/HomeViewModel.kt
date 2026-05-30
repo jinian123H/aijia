@@ -36,7 +36,12 @@ class HomeViewModel @Inject constructor(
     private val _selectedTabIndex = MutableStateFlow(0)
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
 
-    private val categoryCache = mutableMapOf<Int, List<Video>>()
+    // LRU缓存，最多缓存10个分类，超出时淘汰最旧的
+    private val categoryCache = object : LinkedHashMap<Int, List<Video>>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, List<Video>>?): Boolean {
+            return size > 10
+        }
+    }
 
     init {
         loadHomeData()

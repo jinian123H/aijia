@@ -11,10 +11,8 @@ data class Comment(
     val user: CommentUser,
     val videoId: Int,
     val parentId: Int? = null,
-    val likes: Int = 0,
     val createTime: String,
     val replyCount: Int = 0,
-    val isLiked: Boolean = false,
     val isSystem: Boolean = false
 ) {
     // 兼容旧字段访问
@@ -24,17 +22,7 @@ data class Comment(
     val commentTime: Long get() = parseTimeToTimestamp(createTime)
 
     private fun parseTimeToTimestamp(timeStr: String): Long {
-        return try {
-            // 如果是相对时间描述，返回当前时间
-            if (timeStr.contains("前") || timeStr == "刚刚") {
-                System.currentTimeMillis() / 1000
-            } else {
-                // 尝试解析时间戳
-                timeStr.toLongOrNull() ?: (System.currentTimeMillis() / 1000)
-            }
-        } catch (e: Exception) {
-            System.currentTimeMillis() / 1000
-        }
+        return timeStr.toLongOrNull() ?: (System.currentTimeMillis() / 1000)
     }
 }
 
@@ -117,10 +105,8 @@ data class CommentApiItem(
     val commentTime: Long = 0,
     @SerializedName("user_id")
     val userId: Int = 0,
-    @SerializedName("likes")
-    val likes: Int = 0,
-    @SerializedName("is_liked")
-    val isLiked: Boolean = false,
+    @SerializedName("parent_id")
+    val parentId: Int = 0,
     @SerializedName("is_system")
     val isSystem: Boolean = false
 )

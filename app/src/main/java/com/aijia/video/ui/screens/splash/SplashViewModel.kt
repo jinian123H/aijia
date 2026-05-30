@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil.ImageLoader
 import coil.request.ImageRequest
 import com.aijia.video.VideoApplication
 import com.aijia.video.data.model.AdConfig
@@ -146,7 +145,7 @@ class SplashViewModel @Inject constructor(
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val context = VideoApplication.INSTANCE
-                val imageLoader = ImageLoader.Builder(context).build()
+                val imageLoader = coil.Coil.imageLoader(context)
                 val request = ImageRequest.Builder(context)
                     .data(imageUrl)
                     .build()
@@ -162,7 +161,7 @@ class SplashViewModel @Inject constructor(
         // 使用 Dispatchers.IO 避免阻塞主线程
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val context = VideoApplication.INSTANCE
-            val imageLoader = ImageLoader.Builder(context).build()
+            val imageLoader = coil.Coil.imageLoader(context)
 
             // 收集所有广告图片URL
             val imageUrls = mutableListOf<String>()

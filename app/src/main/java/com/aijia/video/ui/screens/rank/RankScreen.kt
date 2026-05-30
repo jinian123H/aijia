@@ -324,12 +324,12 @@ private fun RankVideoItem(
                     contentDescription = video.name,
                     modifier = Modifier
                         .width(78.dp)
-                        .aspectRatio(9f / 16f)
+                        .aspectRatio(2f / 3f)
                         .clip(RoundedCornerShape(14.dp))
                         .background(Color.LightGray),
                     contentScale = ContentScale.Crop,
                     requestWidth = 78.dp,
-                    requestHeight = 139.dp
+                    requestHeight = 117.dp
                 )
 
                 if (video.isFavorite) {

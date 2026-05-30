@@ -33,6 +33,8 @@ data class AppPermission(
     val groupId: Int = 1,
     @SerializedName("group_name")
     val groupName: String = "游客",
+    @SerializedName("user_end_time")
+    val userEndTime: Long = 0,
     val video: Int = 1,
     val danmaku: Int = 0,
     val comment: Int = 0,
@@ -71,7 +73,7 @@ data class AppPermission(
             userId = 0,
             groupId = 1,
             groupName = "游客",
-            video = 1,
+            video = 0,
             danmaku = 0,
             comment = 0,
             feedback = 0,
@@ -82,7 +84,7 @@ data class AppPermission(
             extend = 0,
             discoverVisible = 0,
             tips = mapOf(
-                "video" to "可观看视频内容",
+                "video" to "当前账号暂无视频权限",
                 "danmaku" to "当前账号暂无弹幕权限",
                 "comment" to "当前账号暂无评论权限",
                 "feedback" to "当前账号暂无反馈权限",

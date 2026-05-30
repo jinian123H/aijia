@@ -40,6 +40,15 @@ fun CommentSection(
     var showError by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
+    // 滚动到底部时自动加载更多
+    LaunchedEffect(listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index) {
+        val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        val totalItems = listState.layoutInfo.totalItemsCount
+        if (totalItems > 0 && lastVisible >= totalItems - 3) {
+            onLoadMore()
+        }
+    }
+
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             showError = true
@@ -57,6 +66,7 @@ fun CommentSection(
         ) {
             items(comments, key = { it.id }) { comment ->
                 CommentItem(comment = comment)
+                HorizontalDivider()
             }
             if (isLoading) {
                 item {
@@ -95,67 +105,57 @@ private fun CommentItem(
     comment: Comment,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        colors = if (comment.isSystem) {
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        } else {
-            CardDefaults.cardColors()
-        }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = comment.commentName,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = if (comment.isSystem) FontWeight.Bold else FontWeight.Normal,
-                        color = if (comment.isSystem) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                    )
+                Text(
+                    text = comment.commentName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = if (comment.isSystem) FontWeight.Bold else FontWeight.Normal,
+                    color = if (comment.isSystem) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                )
 
-                    if (comment.isSystem) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            shape = MaterialTheme.shapes.extraSmall,
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        ) {
-                            Text(
-                                text = "置顶",
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                if (comment.isSystem) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        shape = MaterialTheme.shapes.extraSmall,
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Text(
+                            text = "置顶",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
-
-                Text(
-                    text = formatTime(comment.commentTime),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
             Text(
-                text = comment.commentContent,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (comment.isSystem) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+                text = if (comment.isSystem) formatTime(System.currentTimeMillis() / 1000) else formatTime(comment.commentTime),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = comment.commentContent,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (comment.isSystem) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 

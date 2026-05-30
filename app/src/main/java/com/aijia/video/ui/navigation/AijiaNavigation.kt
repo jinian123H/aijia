@@ -4,6 +4,8 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -102,9 +104,13 @@ fun AijiaNavigation(
             // 同步等待 typeId 加载完成
             val configuredShortVideoTypeId = shortVideoNavigationViewModel.getTypeIdAsync()
             if (configuredShortVideoTypeId != null && video.typeId == configuredShortVideoTypeId) {
-                navController.navigate("short_video?videoId=${video.id}&typeId=${video.typeId}")
+                navController.navigate("short_video?videoId=${video.id}&typeId=${video.typeId}") {
+                    launchSingleTop = true
+                }
             } else {
-                navController.navigate("player/${video.id}")
+                navController.navigate("player/${video.id}") {
+                    launchSingleTop = true
+                }
             }
         }
     }
@@ -131,20 +137,20 @@ fun AijiaNavigation(
                     onNavigateToPlayer = ::navigateToVideo,
                     onNavigateToSearch = {
                         if (appPermission.hasPermission("search")) {
-                            navController.navigate("search")
+                            navController.navigate("search") { launchSingleTop = true }
                         } else {
                             showPermissionTip("search", "当前账号暂无搜索权限")
                         }
                     },
                     onNavigateToProfile = {
-                        navController.navigate("profile")
+                        navController.navigate("profile") { launchSingleTop = true }
                     },
                     onNavigateToHistory = {
-                        navController.navigate("history")
+                        navController.navigate("history") { launchSingleTop = true }
                     },
                     onNavigateToDownload = {
                         if (appPermission.hasPermission("download")) {
-                            navController.navigate("download")
+                            navController.navigate("download") { launchSingleTop = true }
                         } else {
                             showPermissionTip("download", "当前账号暂无下载权限")
                         }
@@ -183,32 +189,32 @@ fun AijiaNavigation(
             composable("profile") {
                 ProfileScreen(
                     onNavigateToFavorites = {
-                        navController.navigate("favorites")
+                        navController.navigate("favorites") { launchSingleTop = true }
                     },
                     onNavigateToDownload = {
                         if (appPermission.hasPermission("download")) {
-                            navController.navigate("download")
+                            navController.navigate("download") { launchSingleTop = true }
                         } else {
                             showPermissionTip("download", "当前账号暂无下载权限")
                         }
                     },
                     onNavigateToHistory = {
-                        navController.navigate("history")
+                        navController.navigate("history") { launchSingleTop = true }
                     },
                     onNavigateToMessage = {
-                        navController.navigate("message")
+                        navController.navigate("message") { launchSingleTop = true }
                     },
                     onNavigateToLogin = {
-                        navController.navigate("auth/login")
+                        navController.navigate("auth/login") { launchSingleTop = true }
                     },
                     onNavigateToRegister = {
-                        navController.navigate("auth/register")
+                        navController.navigate("auth/register") { launchSingleTop = true }
                     },
                     onNavigateToCardExchange = {
-                        navController.navigate("card_exchange")
+                        navController.navigate("card_exchange") { launchSingleTop = true }
                     },
                     onNavigateToThemeSettings = {
-                        navController.navigate("theme_settings")
+                        navController.navigate("theme_settings") { launchSingleTop = true }
                     }
                 )
             }
@@ -288,7 +294,9 @@ fun AijiaNavigation(
                             } else {
                                 downloadRecord.videoTitle
                             }
-                            navController.navigate("local_player?path=${android.net.Uri.encode(downloadRecord.localPath)}&title=${android.net.Uri.encode(title)}")
+                            navController.navigate("local_player?path=${android.net.Uri.encode(downloadRecord.localPath)}&title=${android.net.Uri.encode(title)}") {
+                                launchSingleTop = true
+                            }
                         }
                     )
                 } else {
@@ -363,10 +371,12 @@ fun AijiaNavigation(
     val isShortVideoRoute = currentRoute?.startsWith("short_video") == true
 
     if (isFixedNavigation && shouldShowBottomNav && !isShortVideoRoute) {
-        Box(modifier = modifier.fillMaxSize()) {
+        Box(modifier = modifier.fillMaxSize().statusBarsPadding()) {
             navHostContent(Modifier.fillMaxSize())
             Box(
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
             ) {
                 BottomNavigationBar(
                     navController = navController,
@@ -381,7 +391,9 @@ fun AijiaNavigation(
 
             if (shouldShowBottomNav) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding(),
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     BottomNavigationBar(
@@ -393,12 +405,14 @@ fun AijiaNavigation(
             }
         }
     } else {
-        Box(modifier = modifier.fillMaxSize()) {
+        Box(modifier = modifier.fillMaxSize().statusBarsPadding()) {
             navHostContent(Modifier.fillMaxSize())
 
             if (shouldShowBottomNav) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding(),
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     BottomNavigationBar(

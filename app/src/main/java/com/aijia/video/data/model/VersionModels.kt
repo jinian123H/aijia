@@ -11,7 +11,9 @@ data class CheckVersionRequest(
     @SerializedName("version_name")
     val versionName: String,
     @SerializedName("update_version_id")
-    val updateVersionId: String = ""
+    val updateVersionId: String = "",
+    @SerializedName("device")
+    val device: Int = 1 // 1=Android 2=iOS 3=TV 4=PC
 )
 
 /**
@@ -53,7 +55,9 @@ data class CheckForceUpdateRequest(
     @SerializedName("update_version_id")
     val updateVersionId: String = "",
     @SerializedName("platform")
-    val platform: String = "android"
+    val platform: String = "android",
+    @SerializedName("device")
+    val device: Int = 1 // 1=Android 2=iOS 3=TV 4=PC
 )
 
 /**

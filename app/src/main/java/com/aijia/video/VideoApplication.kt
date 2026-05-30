@@ -2,6 +2,9 @@ package com.aijia.video
 
 import android.app.Application
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.GifDecoder
@@ -11,7 +14,6 @@ import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import com.aijia.video.BuildConfig
 import com.aijia.video.data.remote.ApiSecurity
-import com.aijia.video.util.GifUrlReader
 import dagger.hilt.android.HiltAndroidApp
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
@@ -32,30 +34,28 @@ class VideoApplication : Application(), ImageLoaderFactory {
         super.onCreate()
         INSTANCE = this
 
-        // Root/Hook 检测：检测到后仅降级，不强退（强退容易被patch）
-        if (!BuildConfig.DEBUG && SecurityCheck.isCompromised()) {
-            Log.w(TAG, "设备安全检查未通过，降级为游客模式")
-            SecurityCheck.compromised = true
-        }
+        // 安全检查和 API 初始化放到后台线程，避免阻塞主线程（/proc/self/maps 读取耗时 ~900ms）
+        CoroutineScope(Dispatchers.Default).launch {
+            // Root/Hook 检测：检测到后仅降级，不强退（强退容易被patch）
+            if (!BuildConfig.DEBUG && SecurityCheck.isCompromised()) {
+                Log.w(TAG, "设备安全检查未通过，降级为游客模式")
+                SecurityCheck.compromised = true
+            }
 
-        // 初始化API安全模块（从GIF隐写配置加载密钥）
-        initApiSecurity()
+            // 初始化API安全模块
+            initApiSecurity()
+        }
     }
 
     /**
      * 初始化API安全模块
-     * 从assets/loading_placeholder.gif读取加密配置
+     * 从assets/api_config.json读取明文加密配置
      */
     private fun initApiSecurity() {
         try {
-            val config = GifUrlReader.readConfig(this, "loading_placeholder.gif")
-            if (config != null) {
-                ApiSecurity.init(config)
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "API安全模块初始化成功")
-                }
-            } else {
-                Log.e(TAG, "GIF加密配置读取失败，API请求将无法加密签名")
+            ApiSecurity.init(this)
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "API安全模块初始化成功")
             }
         } catch (e: Exception) {
             Log.e(TAG, "API安全模块初始化异常: ${e.message}")
@@ -74,7 +74,7 @@ class VideoApplication : Application(), ImageLoaderFactory {
             .okHttpClient(imageOkHttpClient)
             .memoryCache {
                 MemoryCache.Builder(this)
-                    .maxSizePercent(0.20)
+                    .maxSizePercent(0.10)
                     .build()
             }
             .diskCache {

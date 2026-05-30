@@ -15,7 +15,11 @@ class MessageRepository @Inject constructor(
 
     suspend fun submitMessage(content: String, contact: String = ""): Result<Unit> {
         return try {
-            val response = apiService.submitMessage(content, contact)
+            val body = com.google.gson.JsonObject().apply {
+                addProperty("message_content", content)
+                addProperty("message_contact", contact)
+            }
+            val response = apiService.submitMessage(body)
             if (response.isSuccessful) {
                 val json = response.body()?.string() ?: return Result.failure(Exception("Empty response"))
                 val apiResponse: ApiResponse<*> = gson.fromJson(json, ApiResponse::class.java)

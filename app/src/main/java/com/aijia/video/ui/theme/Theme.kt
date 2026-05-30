@@ -141,7 +141,7 @@ private fun resolveDarkTheme(darkMode: String, systemDarkTheme: Boolean): Boolea
  */
 @Composable
 fun AijiaVideoTheme(
-    themeMode: String = AppThemeDefaults.THEME_CLASSIC,
+    themeMode: String = AppThemeDefaults.THEME_GOLDEN,
     darkMode: String = AppThemeDefaults.DARK_MODE_FOLLOW_SYSTEM,
     fontMode: String = AppThemeDefaults.FONT_SYSTEM,
     content: @Composable () -> Unit

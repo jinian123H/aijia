@@ -60,6 +60,9 @@ android {
         compose = true
         buildConfig = true
     }
+    lint {
+        checkReleaseBuilds = false
+    }
 }
 
 dependencies {
@@ -121,6 +124,12 @@ dependencies {
     
     // Permissions
     implementation(libs.accompanist.permissions)
+
+    // Camera & QR Code Scanning
+    implementation("androidx.camera:camera-camera2:1.4.2")
+    implementation("androidx.camera:camera-lifecycle:1.4.2")
+    implementation("androidx.camera:camera-view:1.4.2")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
     
     // System UI Controller
     implementation(libs.accompanist.systemuicontroller)

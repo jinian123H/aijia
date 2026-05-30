@@ -152,11 +152,11 @@ fun HorizontalVideoCard(
                 contentDescription = video.name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(9f / 16f)
+                    .height(220.dp)
                     .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
                 contentScale = ContentScale.Crop,
                 requestWidth = 120.dp,
-                requestHeight = 214.dp
+                requestHeight = 160.dp
             )
 
             if (video.isFavorite) {

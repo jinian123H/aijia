@@ -20,7 +20,8 @@ import javax.inject.Singleton
 class CommentRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val apiService: ApiService,
-    private val gson: Gson
+    private val gson: Gson,
+    private val okHttpClient: okhttp3.OkHttpClient
 ) {
     private val danmuPrefs by lazy {
         context.getSharedPreferences("player_local_danmu", Context.MODE_PRIVATE)
@@ -30,11 +31,7 @@ class CommentRepository @Inject constructor(
     // 弹幕列表
     private val _danmuList = MutableStateFlow<List<Danmu>>(emptyList())
     val danmuList: Flow<List<Danmu>> = _danmuList.asStateFlow()
-    
-    // 评论列表
-    private val _commentList = MutableStateFlow<List<Comment>>(emptyList())
-    val commentList: Flow<List<Comment>> = _commentList.asStateFlow()
-    
+
     // 发送弹幕状态
     private val _sendDanmuStatus = MutableStateFlow<Result<Unit>?>(null)
     val sendDanmuStatus: Flow<Result<Unit>?> = _sendDanmuStatus.asStateFlow()
@@ -64,10 +61,9 @@ class CommentRepository @Inject constructor(
                                 avatar = item.userPortrait
                             ),
                             videoId = videoId,
-                            likes = item.likes,
+                            parentId = if (item.parentId > 0) item.parentId else null,
                             createTime = formatCommentTime(item.commentTime),
                             replyCount = 0,
-                            isLiked = item.isLiked,
                             isSystem = item.isSystem
                         )
                     }
@@ -77,15 +73,6 @@ class CommentRepository @Inject constructor(
                         page = body.data.page,
                         limit = body.data.limit
                     )
-                    data.let {
-                        val currentComments = _commentList.value.toMutableList()
-                        if (page == 1) {
-                            _commentList.value = data.comments
-                        } else {
-                            currentComments.addAll(data.comments)
-                            _commentList.value = currentComments
-                        }
-                    }
                     Result.success(
                         CommentResponse(
                             code = body.code,
@@ -106,7 +93,15 @@ class CommentRepository @Inject constructor(
     
     suspend fun sendComment(videoId: Int, content: String, parentId: Int? = null): Result<Unit> {
         return try {
-            val response = apiService.postComment(content, videoId, 1)
+            val body = com.google.gson.JsonObject().apply {
+                addProperty("comment_content", content)
+                addProperty("rid", videoId)
+                addProperty("mid", 1)
+                if (parentId != null && parentId > 0) {
+                    addProperty("parent_id", parentId)
+                }
+            }
+            val response = apiService.postComment(body)
             if (response.isSuccessful) {
                 val json = response.body()?.string() ?: return Result.failure(Exception("Empty response"))
                 val apiResponse: com.aijia.video.data.model.ApiResponse<*> = gson.fromJson(json, com.aijia.video.data.model.ApiResponse::class.java)
@@ -147,30 +142,6 @@ class CommentRepository @Inject constructor(
         val msg: String,
         val data: Any?
     )
-    
-    /**
-     * 点赞评论
-     */
-    suspend fun likeComment(commentId: Int): Result<Unit> {
-        return try {
-            updateCommentLikeStatus(commentId, true)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-    
-    /**
-     * 取消点赞
-     */
-    suspend fun unlikeComment(commentId: Int): Result<Unit> {
-        return try {
-            updateCommentLikeStatus(commentId, false)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
     
     suspend fun getVideoDanmu(videoId: Int, videoUrl: String): Result<com.aijia.video.data.model.DanmuResponse> {
         val localDanmu = getLocalDanmu(videoId)
@@ -214,9 +185,8 @@ class CommentRepository @Inject constructor(
             )
 
             // 从第三方API获取弹幕
-            val client = okhttp3.OkHttpClient()
             val request = okhttp3.Request.Builder().url(fullUrl).build()
-            val response = client.newCall(request).execute()
+            val response = okHttpClient.newCall(request).execute()
 
             if (!response.isSuccessful) {
                 _danmuList.value = localDanmu
@@ -379,22 +349,6 @@ class CommentRepository @Inject constructor(
     }
     
     /**
-     * 更新评论点赞状态
-     */
-    private fun updateCommentLikeStatus(commentId: Int, isLiked: Boolean) {
-        val currentComments = _commentList.value.toMutableList()
-        val commentIndex = currentComments.indexOfFirst { it.id == commentId }
-        if (commentIndex != -1) {
-            val comment = currentComments[commentIndex]
-            currentComments[commentIndex] = comment.copy(
-                isLiked = isLiked,
-                likes = if (isLiked) comment.likes + 1 else comment.likes - 1
-            )
-            _commentList.value = currentComments
-        }
-    }
-    
-    /**
      * 清空状态
      */
     fun clearStatus() {
@@ -407,10 +361,11 @@ class CommentRepository @Inject constructor(
      */
     suspend fun postFeedback(type: String, vodId: Int = 0): Result<Unit> {
         return try {
-            val response = apiService.postFeedback(
-                type = type,
-                vodId = vodId
-            )
+            val body = com.google.gson.JsonObject().apply {
+                addProperty("feedback_type", type)
+                addProperty("vod_id", vodId)
+            }
+            val response = apiService.postFeedback(body)
             if (response.isSuccessful) {
                 val json = response.body()?.string() ?: return Result.failure(Exception("Empty response"))
                 val apiResponse: com.aijia.video.data.model.ApiResponse<*> = gson.fromJson(json, com.aijia.video.data.model.ApiResponse::class.java)
@@ -451,15 +406,16 @@ class CommentRepository @Inject constructor(
         coverUrl: String = ""
     ): Result<String> {
         return try {
-            val response = apiService.postUrge(
-                vodId = vodId,
-                vodName = vodName,
-                episodeName = episodeName,
-                playFrom = playFrom,
-                playUrl = playUrl,
-                resolvedUrl = resolvedUrl,
-                coverUrl = coverUrl
-            )
+            val body = com.google.gson.JsonObject().apply {
+                addProperty("vod_id", vodId)
+                addProperty("vod_name", vodName)
+                addProperty("episode_name", episodeName)
+                addProperty("play_from", playFrom)
+                addProperty("play_url", playUrl)
+                addProperty("resolved_url", resolvedUrl)
+                addProperty("cover_url", coverUrl)
+            }
+            val response = apiService.postUrge(body)
             if (response.isSuccessful) {
                 val json = response.body()?.string() ?: return Result.failure(Exception("Empty response"))
                 val apiResponse: com.aijia.video.data.model.ApiResponse<*> = gson.fromJson(json, com.aijia.video.data.model.ApiResponse::class.java)
@@ -489,8 +445,7 @@ class CommentRepository @Inject constructor(
 
     private fun formatCommentTime(timestamp: Long): String {
         if (timestamp <= 0) return ""
-        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-        return formatter.format(java.util.Date(timestamp * 1000))
+        return timestamp.toString()
     }
 }
 

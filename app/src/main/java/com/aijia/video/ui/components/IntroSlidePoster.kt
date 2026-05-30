@@ -23,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -141,7 +142,7 @@ fun IntroSlidePoster(
                             Text(
                                 text = "更多",
                                 fontSize = 13.sp,
-                                color = Color(0xFF2196F3),
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .padding(start = 4.dp)
                                     .clickable { showFullActor = true }
@@ -173,7 +174,7 @@ fun IntroSlidePoster(
                         Text(
                             text = "更多",
                             fontSize = 13.sp,
-                            color = Color(0xFF2196F3),
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .padding(start = 4.dp)
                                 .clickable { showFullIntro = true }
@@ -196,7 +197,7 @@ fun IntroSlidePoster(
                     Text(
                         text = " 播放失败请切换",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 LazyRow(
@@ -211,7 +212,7 @@ fun IntroSlidePoster(
                                 modifier = Modifier
                                     .border(
                                         width = 1.dp,
-                                        color = if (index == selectedSourceIndex) Color(0xFF2196F3) else Color.Gray,
+                                        color = if (index == selectedSourceIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                         shape = RoundedCornerShape(4.dp)
                                     )
                                     .clickable { onSourceSelected(index) }
@@ -220,7 +221,7 @@ fun IntroSlidePoster(
                                 Text(
                                     text = source.name,
                                     fontSize = 13.sp,
-                                    color = if (index == selectedSourceIndex) Color(0xFF2196F3) else Color.Black
+                                    color = if (index == selectedSourceIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             // 集数标记（固定在右上角）
@@ -229,7 +230,7 @@ fun IntroSlidePoster(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
                                         .offset(x = 4.dp, y = (-4).dp)
-                                        .background(Color.Red, CircleShape)
+                                        .background(MaterialTheme.colorScheme.error, CircleShape)
                                         .padding(horizontal = 4.dp, vertical = 2.dp)
                                 ) {
                                     Text(
@@ -264,14 +265,14 @@ fun IntroSlidePoster(
                             Text(
                                 text = "全${episodes.size}集",
                                 fontSize = 13.sp,
-                                color = Color(0xFF2196F3),
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.clickable { showEpisodeSheet = true }
                             )
                         } else {
                             Text(
                                 text = "全${episodes.size}集",
                                 fontSize = 13.sp,
-                                color = Color(0xFF2196F3)
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -286,7 +287,7 @@ fun IntroSlidePoster(
                                     modifier = Modifier
                                         .border(
                                             width = 1.dp,
-                                            color = if (index == selectedEpisodeIndex) Color(0xFF2196F3) else Color.Gray,
+                                            color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                             shape = RoundedCornerShape(4.dp)
                                         )
                                         .clickable { onEpisodeSelected(index) }
@@ -295,7 +296,7 @@ fun IntroSlidePoster(
                                     Text(
                                         text = episode.name,
                                         fontSize = 13.sp,
-                                        color = if (index == selectedEpisodeIndex) Color(0xFF2196F3) else Color.Black
+                                        color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -305,7 +306,7 @@ fun IntroSlidePoster(
                         Text(
                             text = episodes.firstOrNull()?.name ?: "第1集",
                             fontSize = 13.sp,
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
@@ -400,7 +401,7 @@ fun IntroSlidePoster(
                                 .fillMaxWidth()
                                 .border(
                                     width = 1.dp,
-                                    color = if (index == selectedEpisodeIndex) Color(0xFF2196F3) else Color.Gray,
+                                    color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .clickable {
@@ -413,7 +414,7 @@ fun IntroSlidePoster(
                             Text(
                                 text = episode.name,
                                 fontSize = 12.sp,
-                                color = if (index == selectedEpisodeIndex) Color(0xFF2196F3) else Color.Black,
+                                color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )

@@ -137,7 +137,7 @@ fun IntroSlidePosterTheme2(
                 ActionButtonCompact(
                     icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     label = if (isFavorite) "已收藏" else "收藏",
-                    tint = if (isFavorite) Color(0xFFE91E63) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                     onClick = onFavoriteClick,
                     modifier = Modifier.weight(1f)
                 )
@@ -184,7 +184,7 @@ fun IntroSlidePosterTheme2(
                     Text(
                         text = " 播放失败请切换",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 LazyRow(
@@ -199,7 +199,7 @@ fun IntroSlidePosterTheme2(
                                 modifier = Modifier
                                     .border(
                                         width = 1.dp,
-                                        color = if (index == selectedSourceIndex) MaterialTheme.colorScheme.primary else Color.Gray,
+                                        color = if (index == selectedSourceIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                         shape = RoundedCornerShape(4.dp)
                                     )
                                     .clickable { onSourceSelected(index) }
@@ -208,7 +208,7 @@ fun IntroSlidePosterTheme2(
                                 Text(
                                     text = source.name,
                                     fontSize = 13.sp,
-                                    color = if (index == selectedSourceIndex) MaterialTheme.colorScheme.primary else Color.Black
+                                    color = if (index == selectedSourceIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             // 集数标记（固定在右上角）
@@ -217,7 +217,7 @@ fun IntroSlidePosterTheme2(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
                                         .offset(x = 4.dp, y = (-4).dp)
-                                        .background(Color.Red, CircleShape)
+                                        .background(MaterialTheme.colorScheme.error, CircleShape)
                                         .padding(horizontal = 4.dp, vertical = 2.dp)
                                 ) {
                                     Text(
@@ -274,7 +274,7 @@ fun IntroSlidePosterTheme2(
                                     modifier = Modifier
                                         .border(
                                             width = 1.dp,
-                                            color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else Color.Gray,
+                                            color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                             shape = RoundedCornerShape(4.dp)
                                         )
                                         .clickable { onEpisodeSelected(index) }
@@ -283,7 +283,7 @@ fun IntroSlidePosterTheme2(
                                     Text(
                                         text = episode.name,
                                         fontSize = 13.sp,
-                                        color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else Color.Black
+                                        color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -319,7 +319,7 @@ fun IntroSlidePosterTheme2(
                                     modifier = Modifier
                                         .border(
                                             width = 1.dp,
-                                            color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else Color.Gray,
+                                            color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                             shape = RoundedCornerShape(4.dp)
                                         )
                                         .clickable { onEpisodeSelected(index) }
@@ -328,7 +328,7 @@ fun IntroSlidePosterTheme2(
                                     Text(
                                         text = episode.name,
                                         fontSize = 13.sp,
-                                        color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else Color.Black
+                                        color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -464,7 +464,7 @@ fun IntroSlidePosterTheme2(
                                 .fillMaxWidth()
                                 .border(
                                     width = 1.dp,
-                                    color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else Color.Gray,
+                                    color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .clickable {
@@ -477,7 +477,7 @@ fun IntroSlidePosterTheme2(
                             Text(
                                 text = episode.name,
                                 fontSize = 12.sp,
-                                color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else Color.Black,
+                                color = if (index == selectedEpisodeIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )

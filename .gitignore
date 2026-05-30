@@ -61,6 +61,9 @@ vcs.xml
 # Kotlin errors
 .kotlin/
 
+# API config (contains sensitive keys)
+api_config.json
+
 # Built application files
 *.apk
 *.ap_

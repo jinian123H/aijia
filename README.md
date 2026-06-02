@@ -113,7 +113,7 @@ app/src/main/java/com/aijia/video/
 ## 🔧 配置说明
 
 ### 网络配置
-- 基础URL: `http://1.94.212.201:8090`
+- 基础URL: `http://192.168.31.999:9090`
 - 支持HTTP明文传输（用于开发测试）
 - 生产环境建议使用HTTPS
 
@@ -158,14 +158,23 @@ app/src/main/java/com/aijia/video/
 
 ## 📝 TODO
 
-- [ ] 集成Media3视频播放器
-- [ ] 实现弹幕系统
-- [ ] 添加视频下载功能
-- [ ] 完善用户系统
-- [ ] 实现投屏功能
-- [ ] 添加性能监控
-- [ ] 完善错误处理
-- [ ] 添加单元测试
+- [√] 集成Media3视频播放器
+- [√] 实现弹幕系统
+- [√] 添加视频下载功能
+- [√] 完善用户系统
+- [√] 实现投屏功能
+- [√] 添加性能监控
+- [√] 完善错误处理
+- [√] 添加单元测试
+
+## 演示图片
+![首页](https://wmimg.com/i/1502/2026/05/6a1aa5a44192d.png)
+![播放器页面](https://wmimg.com/i/1502/2026/05/6a1aa5a044b88.png)
+![排行榜页面](https://wmimg.com/i/1502/2026/05/6a1aa5a057047.png)
+![短剧页面](https://wmimg.com/i/1502/2026/05/6a1aa5a3948a7.png)
+![我的页面](https://wmimg.com/i/1502/2026/05/6a1aa59fd3bb3.png)
+![主题页面](https://wmimg.com/i/1502/2026/05/6a1aa5a03fea0.png)
+![后端主页](https://wmimg.com/i/1502/2026/05/6a1ae033e1afd.png)
 
 ## 🤝 贡献
 
@@ -175,7 +184,36 @@ app/src/main/java/com/aijia/video/
 
 本项目基于MIT许可证开源。
 
+## 🤝 开源地址
+
+https://github.com/jinian123H/aijia
 ---
 
 **项目状态**: ✅ 基础架构完成，可运行  
-**下一步**: 完善视频播放器和具体功能实现 🚀
+------------------------------------------
+
+**安装教程**: 
+
+## 后端
+开放9090端口
+.env
+# 加密配置
+AES_PASSPHRASE=AijiaAES2026SecurePassphrase!@#        -----这是app密钥
+ENABLE_ENCRYPTION=true
+PLAY_SIGN_SECRET=kumiao_play_sign_2026
+PLAY_SIGN_EXPIRE=600
+![后端配置](https://wmimg.com/i/1502/2026/05/6a1ae02af0de4.png)
+
+##  前端
+aijia\app\src\main\assets\api_config.json
+{
+  "url": "http://112.124.36.198:9090",                  -----后端
+  "aes_passphrase": "AijiaAES2026SecurePassphrase!@#",  -----这是app密钥
+  "enable_encryption": true
+}
+
+
+
+
+**下载地址**: 
+https://www.suiyuanlu.cn/index.php/archives/40/

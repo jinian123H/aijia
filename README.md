@@ -1,5 +1,11 @@
 # Aijia Video Application
 
+> **Language / 语言**: [English](#english) | [中文](#中文版-chinese-version)
+
+---
+
+# English {#english}
+
 A modern Kotlin video playback application built with the latest Android technology stack.
 
 ## 🚀 Tech Stack
@@ -230,15 +236,15 @@ Configure `aijia/app/src/main/assets/api_config.json`:
 }
 ```
 
-## � Download
+## 📥 Download
 
 Download: https://www.suiyuanlu.cn/index.php/archives/40/
 
 ---
 
-## 中文版 (Chinese Version)
+# 中文版 (Chinese Version) {#chinese}
 
-# Aijia 视频应用
+Aijia 视频应用
 
 现代化 Kotlin 视频播放应用，采用最新 Android 技术栈。
 
